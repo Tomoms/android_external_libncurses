@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019,2020 Thomas E. Dickey                                     *
+ * Copyright 2019-2022,2023 Thomas E. Dickey                                *
  * Copyright 1999-2013,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -30,7 +30,7 @@
 /*
  * Author: Thomas E. Dickey <dickey@clark.net> 1999
  *
- * $Id: dots.c,v 1.36 2020/02/02 23:34:34 tom Exp $
+ * $Id: dots.c,v 1.45 2023/01/07 17:21:48 tom Exp $
  *
  * A simple demo of the terminfo interface.
  */
@@ -79,9 +79,10 @@ cleanup(void)
     outs(clear_screen);
     outs(cursor_normal);
 
-    printf("\n\n%ld total cells, rate %.2f/sec\n",
-	   total_chars,
-	   ((double) (total_chars) / (double) (time((time_t *) 0) - started)));
+    fflush(stdout);
+    fprintf(stderr, "\n\n%ld total cells, rate %.2f/sec\n",
+	    total_chars,
+	    ((double) (total_chars) / (double) (time((time_t *) 0) - started)));
 }
 
 static void
@@ -110,12 +111,13 @@ get_number(NCURSES_CONST char *cap, int map)
 }
 
 static void
-usage(void)
+usage(int ok)
 {
     static const char *msg[] =
     {
 	"Usage: dots [options]"
 	,""
+	,USAGE_COMMON
 	,"Options:"
 	," -T TERM  override $TERM"
 #if HAVE_USE_ENV
@@ -123,6 +125,7 @@ usage(void)
 #endif
 	," -f       use tigetnum rather than <term.h> mapping"
 	," -m SIZE  set margin (default: 2)"
+	," -r SECS  self-interrupt/exit after specified number of seconds"
 	," -s MSECS delay 1% of the time (default: 1 msecs)"
     };
     size_t n;
@@ -130,12 +133,14 @@ usage(void)
     for (n = 0; n < SIZEOF(msg); n++)
 	fprintf(stderr, "%s\n", msg[n]);
 
-    ExitProgram(EXIT_FAILURE);
+    ExitProgram(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+/* *INDENT-OFF* */
+VERSION_COMMON()
+/* *INDENT-ON* */
 
 int
-main(int argc,
-     char *argv[])
+main(int argc, char *argv[])
 {
     int ch;
     double r;
@@ -143,17 +148,19 @@ main(int argc,
     int my_colors;
     int f_option = 0;
     int m_option = 2;
+    int r_option = 0;
     int s_option = 1;
     size_t need;
     char *my_env;
 
-    while ((ch = getopt(argc, argv, "T:efm:s:")) != -1) {
+    while ((ch = getopt(argc, argv, OPTS_COMMON "T:efm:r:s:")) != -1) {
 	switch (ch) {
 	case 'T':
 	    need = 6 + strlen(optarg);
-	    my_env = malloc(need);
-	    _nc_SPRINTF(my_env, _nc_SLIMIT(need) "TERM=%s", optarg);
-	    putenv(my_env);
+	    if ((my_env = malloc(need)) != NULL) {
+		_nc_SPRINTF(my_env, _nc_SLIMIT(need) "TERM=%s", optarg);
+		putenv(my_env);
+	    }
 	    break;
 #if HAVE_USE_ENV
 	case 'e':
@@ -166,15 +173,22 @@ main(int argc,
 	case 'm':
 	    m_option = atoi(optarg);
 	    break;
+	case 'r':
+	    r_option = atoi(optarg);
+	    break;
 	case 's':
 	    s_option = atoi(optarg);
 	    break;
+	case OPTS_VERSION:
+	    show_version(argv);
+	    ExitProgram(EXIT_SUCCESS);
 	default:
-	    usage();
-	    break;
+	    usage(ch == OPTS_USAGE);
+	    /* NOTREACHED */
 	}
     }
 
+    SetupAlarm(r_option);
     InitAndCatch(setupterm((char *) 0, 1, (int *) 0), onsig);
 
     srand((unsigned) time(0));
@@ -207,7 +221,8 @@ main(int argc,
 		tputs(tparm2(set_a_foreground, z), 1, outc);
 	    } else {
 		tputs(tparm2(set_a_background, z), 1, outc);
-		napms(s_option);
+		if (s_option)
+		    napms(s_option);
 	    }
 	} else if (VALID_STRING(exit_attribute_mode)
 		   && VALID_STRING(enter_reverse_mode)) {
@@ -215,7 +230,8 @@ main(int argc,
 		outs((ranf() > 0.6)
 		     ? enter_reverse_mode
 		     : exit_attribute_mode);
-		napms(s_option);
+		if (s_option)
+		    napms(s_option);
 	    }
 	}
 	outc(p);
@@ -227,8 +243,7 @@ main(int argc,
 }
 #else
 int
-main(int argc GCC_UNUSED,
-     char *argv[]GCC_UNUSED)
+main(void)
 {
     fprintf(stderr, "This program requires terminfo\n");
     exit(EXIT_FAILURE);

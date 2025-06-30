@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020 Thomas E. Dickey                                          *
+ * Copyright 2020-2021,2023 Thomas E. Dickey                                *
  * Copyright 1998-2014,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -47,7 +47,7 @@
 #define CUR SP_TERMTYPE
 #endif
 
-MODULE_ID("$Id: lib_options.c,v 1.81 2020/02/02 23:34:34 tom Exp $")
+MODULE_ID("$Id: lib_options.c,v 1.83 2023/04/29 18:56:12 tom Exp $")
 
 NCURSES_EXPORT(int)
 idlok(WINDOW *win, bool flag)
@@ -92,7 +92,7 @@ NCURSES_SP_NAME(halfdelay) (NCURSES_SP_DCLx int t)
 	returnCode(ERR);
 
     NCURSES_SP_NAME(cbreak) (NCURSES_SP_ARG);
-    SP_PARM->_cbreak = t + 1;
+    IsCbreak(SP_PARM) = t + 1;
     returnCode(OK);
 }
 
@@ -361,7 +361,7 @@ _nc_keypad(SCREEN *sp, int flag)
 #else
 	    if (flag) {
 		(void) NCURSES_PUTP2_FLUSH("keypad_xmit", keypad_xmit);
-	    } else if (!flag && keypad_local) {
+	    } else if (keypad_local) {
 		(void) NCURSES_PUTP2_FLUSH("keypad_local", keypad_local);
 	    }
 

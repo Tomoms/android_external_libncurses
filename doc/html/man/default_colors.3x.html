@@ -1,6 +1,6 @@
-<!-- 
+<!--
   ****************************************************************************
-  * Copyright 2018-2019,2020 Thomas E. Dickey                                *
+  * Copyright 2018-2023,2024 Thomas E. Dickey                                *
   * Copyright 2000-2011,2016 Free Software Foundation, Inc.                  *
   *                                                                          *
   * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -28,43 +28,43 @@
   * authorization.                                                           *
   ****************************************************************************
   * Author: Thomas E. Dickey 1997,1999,2000,2005
-  * @Id: default_colors.3x,v 1.29 2020/02/02 23:34:34 tom Exp @
+  * @Id: default_colors.3x,v 1.52 2024/04/13 22:17:22 tom Exp @
 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <HTML>
 <HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
 <meta name="generator" content="Manpage converted by man2html - see https://invisible-island.net/scripts/readme.html#others_scripts">
-<TITLE>default_colors 3x</TITLE>
+<TITLE>default_colors 3x 2024-04-13 ncurses 6.5 Library calls</TITLE>
 <link rel="author" href="mailto:bug-ncurses@gnu.org">
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
 </HEAD>
 <BODY>
-<H1 class="no-header">default_colors 3x</H1>
+<H1 class="no-header">default_colors 3x 2024-04-13 ncurses 6.5 Library calls</H1>
 <PRE>
-<STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>                                          <STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>
+<STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>               Library calls              <STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>
 
 
 
 
 </PRE><H2><a name="h2-NAME">NAME</a></H2><PRE>
-       <STRONG>use_default_colors</STRONG>, <STRONG>assume_default_colors</STRONG> - use terminal's default col-
-       ors
+       <STRONG>use_default_colors</STRONG>,  <STRONG>assume_default_colors</STRONG>  -  use  terminal's  default
+       colors in <EM>curses</EM>
 
 
 </PRE><H2><a name="h2-SYNOPSIS">SYNOPSIS</a></H2><PRE>
        <STRONG>#include</STRONG> <STRONG>&lt;curses.h&gt;</STRONG>
 
        <STRONG>int</STRONG> <STRONG>use_default_colors(void);</STRONG>
-       <STRONG>int</STRONG> <STRONG>assume_default_colors(int</STRONG> <STRONG>fg,</STRONG> <STRONG>int</STRONG> <STRONG>bg);</STRONG>
+       <STRONG>int</STRONG> <STRONG>assume_default_colors(int</STRONG> <EM>fg</EM><STRONG>,</STRONG> <STRONG>int</STRONG> <EM>bg</EM><STRONG>);</STRONG>
 
 
 </PRE><H2><a name="h2-DESCRIPTION">DESCRIPTION</a></H2><PRE>
-       The <STRONG>use_default_colors</STRONG> and <STRONG>assume_default_colors</STRONG> functions  are  exten-
-       sions to the curses library.  They are used with terminals that support
-       ISO 6429 color, or equivalent.  These terminals allow  the  application
-       to  reset  color  to an unspecified default value (e.g., with SGR 39 or
-       SGR 49).
+       The  <STRONG>use_default_colors</STRONG>   and   <STRONG>assume_default_colors</STRONG>   functions   are
+       extensions  to  the  curses library.  They are used with terminals that
+       support ISO 6429 color,  or  equivalent.   These  terminals  allow  the
+       application  to reset color to an unspecified default value (e.g., with
+       SGR 39 or SGR 49).
 
        Applications that paint a colored background over the whole  screen  do
        not  take  advantage  of  SGR  39  and  SGR  49.  Some applications are
@@ -72,8 +72,8 @@
        text.  For example, there are several implementations of the <STRONG>ls</STRONG> program
        which use colors to denote different file types or permissions.   These
        "color  ls"  programs  do  not necessarily modify the background color,
-       typically using only the <STRONG>setaf</STRONG> terminfo capability  to  set  the  fore-
-       ground  color.   Full-screen  applications  that use default colors can
+       typically  using  only  the  <STRONG>setaf</STRONG>  terminfo  capability  to  set   the
+       foreground color.  Full-screen applications that use default colors can
        achieve similar visual effects.
 
        The first function, <STRONG>use_default_colors</STRONG>  tells  the  curses  library  to
@@ -82,23 +82,23 @@
        default  background and init_pair(x,-1,COLOR_BLUE) will initialize pair
        x as default foreground on blue.
 
-       The other, <STRONG>assume_default_colors</STRONG> is a refinement which tells which col-
-       ors  to  paint  for  color  pair 0.  This function recognizes a special
+       The other, <STRONG>assume_default_colors</STRONG> is  a  refinement  which  tells  which
+       colors  to  paint for color pair 0.  This function recognizes a special
        color number -1, which denotes the default terminal color.
 
        The following are equivalent:
               <EM>use</EM><STRONG>_</STRONG><EM>default</EM><STRONG>_</STRONG><EM>colors();</EM>
               <EM>assume</EM><STRONG>_</STRONG><EM>default</EM><STRONG>_</STRONG><EM>colors(-1,-1);</EM>
 
-       These are ncurses extensions.  For other curses implementations,  color
-       number -1 does not mean anything, just as for ncurses before a success-
-       ful call of <STRONG>use_default_colors</STRONG> or <STRONG>assume_default_colors</STRONG>.
+       These are <EM>ncurses</EM> extensions.  For other curses implementations,  color
+       number  -1  does  not  mean  anything,  just  as  for  <EM>ncurses</EM> before a
+       successful call of <STRONG>use_default_colors</STRONG> or <STRONG>assume_default_colors</STRONG>.
 
        Other curses implementations do not  allow  an  application  to  modify
        color  pair  0.  They assume that the background is COLOR_BLACK, but do
        not ensure that the color pair 0 is painted to  match  the  assumption.
        If   your   application  does  not  use  either  <STRONG>use_default_colors</STRONG>  or
-       <STRONG>assume_default_colors</STRONG> ncurses will paint a white foreground (text) with
+       <STRONG>assume_default_colors</STRONG> <EM>ncurses</EM> will paint a white foreground (text) with
        black background for color pair 0.
 
 
@@ -113,7 +113,7 @@
        Associated with this extension, the <STRONG>init_pair</STRONG> function accepts negative
        arguments to specify default foreground or background colors.
 
-       The  <STRONG>use_default_colors</STRONG>  function  was added to support <EM>ded</EM>.  This is a
+       The  <STRONG>use_default_colors</STRONG>  function  was added to support <STRONG>ded</STRONG>.  This is a
        full-screen application which uses curses to manage only  part  of  the
        screen.  The bottom portion of the screen, which is of adjustable size,
        is left uncolored to display the results from shell commands.  The  top
@@ -121,35 +121,35 @@
        ls" programs.  Attempting to manage the background color of the  screen
        for this application would give unsatisfactory results for a variety of
        reasons.  This extension was devised after noting that color xterm (and
-       similar  programs) provides a background color which does not necessar-
-       ily correspond to any of the ANSI colors.   While  a  special  terminfo
-       entry  could  be  constructed using nine colors, there was no mechanism
-       provided within  curses  to  account  for  the  related  <STRONG>orig_pair</STRONG>  and
-       <STRONG>back_color_erase</STRONG> capabilities.
+       similar   programs)   provides   a  background  color  which  does  not
+       necessarily correspond to any of the  ANSI  colors.   While  a  special
+       terminfo  entry  could  be  constructed using nine colors, there was no
+       mechanism provided within curses to account for the  related  <STRONG>orig_pair</STRONG>
+       and <STRONG>back_color_erase</STRONG> capabilities.
 
-       The <STRONG>assume_default_colors</STRONG> function was added to solve a different prob-
-       lem: support for applications which would use environment variables and
-       other  configuration to bypass curses' notion of the terminal's default
-       colors, setting specific values.
+       The  <STRONG>assume_default_colors</STRONG>  function  was  added  to  solve a different
+       problem: support for applications which would use environment variables
+       and  other  configuration  to  bypass  curses' notion of the terminal's
+       default colors, setting specific values.
 
 
 </PRE><H2><a name="h2-PORTABILITY">PORTABILITY</a></H2><PRE>
-       These routines are specific to ncurses.  They  were  not  supported  on
+       These routines are specific to <EM>ncurses</EM>.  They  were  not  supported  on
        Version 7, BSD or System V implementations.  It is recommended that any
        code depending on them be conditioned using NCURSES_VERSION.
 
 
-</PRE><H2><a name="h2-SEE-ALSO">SEE ALSO</a></H2><PRE>
-       <STRONG><A HREF="curs_color.3x.html">curs_color(3x)</A></STRONG>, <STRONG>ded(1)</STRONG>.
-
-
-</PRE><H2><a name="h2-AUTHOR">AUTHOR</a></H2><PRE>
+</PRE><H2><a name="h2-AUTHORS">AUTHORS</a></H2><PRE>
        Thomas Dickey (from an analysis of the requirements for color xterm for
        XFree86 3.1.2C, February 1996).
 
 
+</PRE><H2><a name="h2-SEE-ALSO">SEE ALSO</a></H2><PRE>
+       <STRONG>ded(1)</STRONG>, <STRONG><A HREF="curs_color.3x.html">curs_color(3x)</A></STRONG>
 
-                                                            <STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>
+
+
+ncurses 6.5                       2024-04-13                <STRONG><A HREF="default_colors.3x.html">default_colors(3x)</A></STRONG>
 </PRE>
 <div class="nav">
 <ul>
@@ -159,8 +159,8 @@
 <li><a href="#h2-RETURN-VALUE">RETURN VALUE</a></li>
 <li><a href="#h2-NOTES">NOTES</a></li>
 <li><a href="#h2-PORTABILITY">PORTABILITY</a></li>
+<li><a href="#h2-AUTHORS">AUTHORS</a></li>
 <li><a href="#h2-SEE-ALSO">SEE ALSO</a></li>
-<li><a href="#h2-AUTHOR">AUTHOR</a></li>
 </ul>
 </div>
 </BODY>

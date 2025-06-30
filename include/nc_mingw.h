@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2018-2019,2020 Thomas E. Dickey                                *
+ * Copyright 2018-2020,2023 Thomas E. Dickey                                *
  * Copyright 2008-2010,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -31,12 +31,13 @@
  * Author: Thomas Dickey, 2008-on                                           *
  ****************************************************************************/
 
-/* $Id: nc_mingw.h,v 1.7 2020/02/02 23:34:34 tom Exp $ */
+/* $Id: nc_mingw.h,v 1.10 2023/02/25 19:59:24 tom Exp $ */
 
 #ifndef NC_MINGW_H
 #define NC_MINGW_H 1
 
 #ifdef _WIN32
+
 #ifdef WINVER
 #  if WINVER < 0x0501
 #    error WINVER must at least be 0x0501
@@ -49,15 +50,26 @@
 #undef sleep
 #define sleep(n) Sleep((n) * 1000)
 
-#undef gettimeofday
-#define gettimeofday(tv,tz) _nc_gettimeofday(tv,tz)
-
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>		/* for struct timeval */
+#endif
 
-extern int _nc_gettimeofday(struct timeval *, void *);
+#ifdef _MSC_VER
+#include <winsock2.h>		/* for struct timeval */
+#endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <ncurses_dll.h>
+
+#if !HAVE_CLOCK_GETTIME && !HAVE_GETTIMEOFDAY
+NCURSES_EXPORT(int) _nc_gettimeofday(struct timeval *, void *);
 #undef HAVE_GETTIMEOFDAY
-#define HAVE_GETTIMEOFDAY 1
+#define HAVE_GETTIMEOFDAY 2
+#define gettimeofday(tv,tz) _nc_gettimeofday(tv,tz)
+#endif
 
 #define SIGHUP  1
 #define SIGKILL 9
@@ -65,7 +77,11 @@ extern int _nc_gettimeofday(struct timeval *, void *);
 
 #undef wcwidth
 #define wcwidth(ucs) _nc_wcwidth((wchar_t)(ucs))
-extern int _nc_wcwidth(wchar_t);
+NCURSES_EXPORT(int) _nc_wcwidth(wchar_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _WIN32 */
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 ##############################################################################
-# Copyright 2020 Thomas E. Dickey                                            #
+# Copyright 2020,2023 Thomas E. Dickey                                       #
 # Copyright 1998-2019,2020 Free Software Foundation, Inc.                    #
 #                                                                            #
 # Permission is hereby granted, free of charge, to any person obtaining a    #
@@ -27,7 +27,7 @@
 # use or other dealings in this Software without prior written               #
 # authorization.                                                             #
 ##############################################################################
-# $Id: MKfallback.sh,v 1.24 2020/02/08 21:52:37 tom Exp $
+# $Id: MKfallback.sh,v 1.26 2023/04/22 15:12:57 tom Exp $
 #
 # MKfallback.sh -- create fallback table for entry reads
 #
@@ -44,12 +44,14 @@ terminfo_src=$1
 shift
 
 tic_path=$1
+test -z "$tic_path" && tic_path=tic
 shift
 
 infocmp_path=$1
+test -z "$infocmp_path" && infocmp_path=infocmp
 shift
 
-case $tic_path in #(vi
+case "$tic_path" in #(vi
 /*)
 	tic_head=`echo "$tic_path" | sed -e 's,/[^/]*$,,'`
 	PATH=$tic_head:$PATH
@@ -67,7 +69,7 @@ if test $# != 0 ; then
 	TERMINFO_DIRS=$TERMINFO:$terminfo_dir
 	export TERMINFO_DIRS
 
-	$tic_path -x $terminfo_src >&2
+	"$tic_path" -x "$terminfo_src" >&2
 else
 	tmp_info=
 fi
@@ -90,10 +92,10 @@ then
 
 /* fallback entries for: $* */
 EOF
-	for x in $*
+	for x in "$@"
 	do
 		echo "/* $x */"
-		$infocmp_path -E $x | sed -e 's/\<short\>/NCURSES_INT2/g'
+		"$infocmp_path" -E "$x" | sed -e 's/\<short\>/NCURSES_INT2/g'
 	done
 
 	cat <<EOF
@@ -101,10 +103,10 @@ static const TERMTYPE2 fallbacks[$#] =
 {
 EOF
 	comma=""
-	for x in $*
+	for x in "$@"
 	do
 		echo "$comma /* $x */"
-		$infocmp_path -e $x
+		"$infocmp_path" -e "$x"
 		comma=","
 	done
 
@@ -144,9 +146,6 @@ cat <<EOF
 #if NCURSES_EXT_NUMBERS
 #undef _nc_fallback
 
-/*
- * This entrypoint is used by tack 1.07
- */
 NCURSES_EXPORT(const TERMTYPE *)
 _nc_fallback (const char *name)
 {

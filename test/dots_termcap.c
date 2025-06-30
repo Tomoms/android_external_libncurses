@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2018-2019,2020 Thomas E. Dickey                                *
+ * Copyright 2018-2022,2023 Thomas E. Dickey                                *
  * Copyright 2013-2014,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -30,14 +30,14 @@
 /*
  * Author: Thomas E. Dickey
  *
- * $Id: dots_termcap.c,v 1.20 2020/02/02 23:34:34 tom Exp $
+ * $Id: dots_termcap.c,v 1.32 2023/02/25 18:11:21 tom Exp $
  *
  * A simple demo of the termcap interface.
  */
 #define USE_TINFO
 #include <test.priv.h>
 
-#if !defined(_WIN32)
+#if !defined(_NC_WINDOWS)
 #include <sys/time.h>
 #endif
 
@@ -131,9 +131,10 @@ cleanup(void)
     outs(t_cl);
     outs(t_ve);
 
-    printf("\n\n%ld total cells, rate %.2f/sec\n",
-	   total_chars,
-	   ((double) (total_chars) / (double) (time((time_t *) 0) - started)));
+    fflush(stdout);
+    fprintf(stderr, "\n\n%ld total cells, rate %.2f/sec\n",
+	    total_chars,
+	    ((double) (total_chars) / (double) (time((time_t *) 0) - started)));
 }
 
 static void
@@ -149,12 +150,20 @@ ranf(void)
     return ((double) r / 32768.);
 }
 
+/*
+ * napms is a curses function which happens to be usable without initializing
+ * the screen, but if this program happened to be build with a "real" termcap
+ * library, there is nothing like napms. 
+ */
+#if HAVE_NAPMS
+#define my_napms(ms) napms(ms)
+#else
 static void
 my_napms(int ms)
 {
     if (ms > 0) {
-#if defined(_WIN32) || !HAVE_GETTIMEOFDAY
-	Sleep((DWORD) ms);
+#if defined(_NC_WINDOWS)
+	Sleep((unsigned int) ms);
 #else
 	struct timeval data;
 	data.tv_sec = 0;
@@ -163,6 +172,7 @@ my_napms(int ms)
 #endif
     }
 }
+#endif
 
 static int
 get_number(NCURSES_CONST char *cap, const char *env)
@@ -179,16 +189,18 @@ get_number(NCURSES_CONST char *cap, const char *env)
 }
 
 static void
-usage(void)
+usage(int ok)
 {
     static const char *msg[] =
     {
 	"Usage: dots_termcap [options]"
 	,""
+	,USAGE_COMMON
 	,"Options:"
 	," -T TERM  override $TERM"
 	," -e       allow environment $LINES / $COLUMNS"
 	," -m SIZE  set margin (default: 2)"
+	," -r SECS  self-interrupt/exit after specified number of seconds"
 	," -s MSECS delay 1% of the time (default: 1 msecs)"
     };
     size_t n;
@@ -196,8 +208,11 @@ usage(void)
     for (n = 0; n < SIZEOF(msg); n++)
 	fprintf(stderr, "%s\n", msg[n]);
 
-    ExitProgram(EXIT_FAILURE);
+    ExitProgram(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+/* *INDENT-OFF* */
+VERSION_COMMON()
+/* *INDENT-ON* */
 
 int
 main(int argc, char *argv[])
@@ -208,6 +223,7 @@ main(int argc, char *argv[])
     int num_columns;
     int e_option = 0;
     int m_option = 2;
+    int r_option = 0;
     int s_option = 1;
     double r;
     double c;
@@ -217,13 +233,14 @@ main(int argc, char *argv[])
     size_t need;
     char *my_env;
 
-    while ((ch = getopt(argc, argv, "T:em:s:")) != -1) {
+    while ((ch = getopt(argc, argv, OPTS_COMMON "T:em:r:s:")) != -1) {
 	switch (ch) {
 	case 'T':
 	    need = 6 + strlen(optarg);
-	    my_env = malloc(need);
-	    _nc_SPRINTF(my_env, _nc_SLIMIT(need) "TERM=%s", optarg);
-	    putenv(my_env);
+	    if ((my_env = malloc(need)) != NULL) {
+		_nc_SPRINTF(my_env, _nc_SLIMIT(need) "TERM=%s", optarg);
+		putenv(my_env);
+	    }
 	    break;
 	case 'e':
 	    e_option = 1;
@@ -231,12 +248,18 @@ main(int argc, char *argv[])
 	case 'm':
 	    m_option = atoi(optarg);
 	    break;
+	case 'r':
+	    r_option = atoi(optarg);
+	    break;
 	case 's':
 	    s_option = atoi(optarg);
 	    break;
+	case OPTS_VERSION:
+	    show_version(argv);
+	    ExitProgram(EXIT_SUCCESS);
 	default:
-	    usage();
-	    break;
+	    usage(ch == OPTS_USAGE);
+	    /* NOTREACHED */
 	}
     }
 
@@ -247,6 +270,7 @@ main(int argc, char *argv[])
 
     srand((unsigned) time(0));
 
+    SetupAlarm((unsigned) r_option);
     InitAndCatch(ch = tgetent(buffer, name), onsig);
     if (ch < 0) {
 	fprintf(stderr, "terminal description not found\n");
@@ -290,7 +314,8 @@ main(int argc, char *argv[])
 		tputs(tgoto(t_AF, 0, z), 1, outc);
 	    } else {
 		tputs(tgoto(t_AB, 0, z), 1, outc);
-		my_napms(s_option);
+		if (s_option)
+		    my_napms(s_option);
 	    }
 	} else if (VALID_STRING(t_me)
 		   && VALID_STRING(t_mr)) {
@@ -298,7 +323,8 @@ main(int argc, char *argv[])
 		outs((ranf() > 0.6)
 		     ? t_mr
 		     : t_me);
-		my_napms(s_option);
+		if (s_option)
+		    my_napms(s_option);
 	    }
 	}
 	outc(p);
@@ -310,8 +336,7 @@ main(int argc, char *argv[])
 }
 #else
 int
-main(int argc GCC_UNUSED,
-     char *argv[]GCC_UNUSED)
+main(void)
 {
     fprintf(stderr, "This program requires termcap\n");
     exit(EXIT_FAILURE);

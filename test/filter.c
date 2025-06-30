@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019,2020 Thomas E. Dickey                                     *
+ * Copyright 2019-2020,2022 Thomas E. Dickey                                *
  * Copyright 1998-2016,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -30,7 +30,7 @@
 /*
  * Author:  Thomas E. Dickey 1998
  *
- * $Id: filter.c,v 1.34 2020/02/02 23:34:34 tom Exp $
+ * $Id: filter.c,v 1.38 2022/12/04 00:40:11 tom Exp $
  *
  * An example of the 'filter()' function in ncurses, this program prompts
  * for commands and executes them (like a command shell).  It illustrates
@@ -42,6 +42,7 @@
  * reset_shell_mode() and reset_prog_mode() functions, we could invoke endwin()
  * and refresh(), but that does not work any better.
  */
+#define NEED_KEY_EVENT
 #include <test.priv.h>
 
 #if HAVE_FILTER
@@ -298,28 +299,32 @@ cancel_altscreen(void)
 #endif
 
 static void
-usage(void)
+usage(int ok)
 {
     static const char *msg[] =
     {
 	"Usage: filter [options]"
 	,""
+	,USAGE_COMMON
 	,"Options:"
 #ifdef NCURSES_VERSION
-	,"  -a   suppress xterm alternate-screen by amending smcup/rmcup"
+	," -a       suppress xterm alternate-screen by amending smcup/rmcup"
 #endif
-	,"  -c   show current time on prompt line with \"Command\""
+	," -c       show current time on prompt line with \"Command\""
 #if HAVE_USE_DEFAULT_COLORS
-	,"  -d   invoke use_default_colors"
+	," -d       invoke use_default_colors"
 #endif
-	,"  -i   use initscr() rather than newterm()"
-	,"  -p   poll for individual characters rather than using getnstr"
+	," -i       use initscr() rather than newterm()"
+	," -p       poll for individual characters rather than using getnstr"
     };
     unsigned n;
     for (n = 0; n < SIZEOF(msg); n++)
 	fprintf(stderr, "%s\n", msg[n]);
-    ExitProgram(EXIT_FAILURE);
+    ExitProgram(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+/* *INDENT-OFF* */
+VERSION_COMMON()
+/* *INDENT-ON* */
 
 int
 main(int argc, char *argv[])
@@ -339,7 +344,7 @@ main(int argc, char *argv[])
 
     setlocale(LC_ALL, "");
 
-    while ((ch = getopt(argc, argv, "adcip")) != -1) {
+    while ((ch = getopt(argc, argv, OPTS_COMMON "adcip")) != -1) {
 	switch (ch) {
 #ifdef NCURSES_VERSION
 	case 'a':
@@ -360,8 +365,12 @@ main(int argc, char *argv[])
 	case 'p':
 	    p_option = TRUE;
 	    break;
+	case OPTS_VERSION:
+	    show_version(argv);
+	    ExitProgram(EXIT_SUCCESS);
 	default:
-	    usage();
+	    usage(ch == OPTS_USAGE);
+	    /* NOTREACHED */
 	}
     }
 

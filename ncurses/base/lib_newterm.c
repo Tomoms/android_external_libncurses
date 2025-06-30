@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2018,2020 Thomas E. Dickey                                     *
+ * Copyright 2018-2020,2022 Thomas E. Dickey                                *
  * Copyright 1998-2016,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -49,7 +49,7 @@
 
 #include <tic.h>
 
-MODULE_ID("$Id: lib_newterm.c,v 1.102 2020/02/02 23:34:34 tom Exp $")
+MODULE_ID("$Id: lib_newterm.c,v 1.104 2022/07/09 18:58:58 tom Exp $")
 
 #ifdef USE_TERM_DRIVER
 #define NumLabels      InfoOf(SP_PARM).numlabels
@@ -88,6 +88,12 @@ _nc_initscr(NCURSES_SP_DCL0)
 	buf.c_oflag &= (unsigned) ~(ONLCR);
 #elif HAVE_SGTTY_H
 	buf.sg_flags &= ~(ECHO | CRMOD);
+#elif defined(EXP_WIN32_DRIVER)
+	buf.dwFlagIn = CONMODE_IN_DEFAULT;
+	buf.dwFlagOut = CONMODE_OUT_DEFAULT | VT_FLAG_OUT;
+	if (WINCONSOLE.isTermInfoConsole) {
+	    buf.dwFlagIn |= VT_FLAG_IN;
+	}
 #else
 	memset(&buf, 0, sizeof(buf));
 #endif
@@ -194,6 +200,11 @@ NCURSES_SP_NAME(newterm) (NCURSES_SP_DCLx
 
     current = CURRENT_SCREEN;
     its_term = (current ? current->_term : 0);
+
+#if defined(EXP_WIN32_DRIVER)
+    _setmode(fileno(_ifp), _O_BINARY);
+    _setmode(fileno(_ofp), _O_BINARY);
+#endif
 
     INIT_TERM_DRIVER();
     /* this loads the capability entry, then sets LINES and COLS */
@@ -351,11 +362,14 @@ NCURSES_EXPORT(SCREEN *)
 newterm(const char *name, FILE *ofp, FILE *ifp)
 {
     SCREEN *rc;
+
+    _nc_init_pthreads();
     _nc_lock_global(prescreen);
     START_TRACE();
     rc = NCURSES_SP_NAME(newterm) (CURRENT_SCREEN_PRE, name, ofp, ifp);
     _nc_forget_prescr();
     _nc_unlock_global(prescreen);
+
     return rc;
 }
 #endif

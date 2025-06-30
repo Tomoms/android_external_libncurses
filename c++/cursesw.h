@@ -1,7 +1,7 @@
 // * This makes emacs happy -*-Mode: C++;-*-
 // vile:cppmode
 /****************************************************************************
- * Copyright 2019,2020 Thomas E. Dickey                                     *
+ * Copyright 2019-2021,2022 Thomas E. Dickey                                *
  * Copyright 1998-2014,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -32,11 +32,22 @@
 #ifndef NCURSES_CURSESW_H_incl
 #define NCURSES_CURSESW_H_incl 1
 
-// $Id: cursesw.h,v 1.56 2020/02/02 23:34:34 tom Exp $
+// $Id: cursesw.h,v 1.59 2022/08/20 20:52:15 tom Exp $
 
 extern "C" {
 #  include   <curses.h>
 }
+
+#if defined(BUILDING_NCURSES_CXX)
+# define NCURSES_CXX_IMPEXP NCURSES_EXPORT_GENERAL_EXPORT
+#else
+# define NCURSES_CXX_IMPEXP NCURSES_EXPORT_GENERAL_IMPORT
+#endif
+
+#define NCURSES_CXX_WRAPPED_VAR(type,name) extern NCURSES_CXX_IMPEXP type NCURSES_PUBLIC_VAR(name)(void)
+
+#define NCURSES_CXX_EXPORT(type) NCURSES_CXX_IMPEXP type NCURSES_API
+#define NCURSES_CXX_EXPORT_VAR(type) NCURSES_CXX_IMPEXP type
 
 #include <etip.h>
 
@@ -757,7 +768,7 @@ extern "C" int     _nc_ripoffline(int, int (*init)(WINDOW*, int));
 extern "C" int     _nc_xx_ripoff_init(WINDOW *, int);
 extern "C" int     _nc_has_mouse(void);
 
-class NCURSES_IMPEXP NCursesWindow
+class NCURSES_CXX_IMPEXP NCursesWindow
 {
   friend class NCursesMenu;
   friend class NCursesForm;
@@ -805,7 +816,7 @@ protected:
   NCursesWindow();
 
 public:
-  NCursesWindow(WINDOW* window);   // useful only for stdscr
+  explicit NCursesWindow(WINDOW* window);   // useful only for stdscr
 
   NCursesWindow(int nlines,        // number of lines
 		int ncols,         // number of columns
@@ -1371,10 +1382,10 @@ public:
 // -------------------------------------------------------------------------
 // We leave this here for compatibility reasons.
 // -------------------------------------------------------------------------
-class NCURSES_IMPEXP NCursesColorWindow : public NCursesWindow
+class NCURSES_CXX_IMPEXP NCursesColorWindow : public NCursesWindow
 {
 public:
-  NCursesColorWindow(WINDOW* &window)   // useful only for stdscr
+  explicit NCursesColorWindow(WINDOW* &window)   // useful only for stdscr
     : NCursesWindow(window) {
       useColors(); }
 
@@ -1417,7 +1428,7 @@ public:
 // Pad Support. We allow an association of a pad with a "real" window
 // through which the pad may be viewed.
 // -------------------------------------------------------------------------
-class NCURSES_IMPEXP NCursesPad : public NCursesWindow
+class NCURSES_CXX_IMPEXP NCursesPad : public NCursesWindow
 {
 private:
   NCursesWindow* viewWin;       // the "viewport" window
@@ -1492,7 +1503,7 @@ public:
   // Put the attributed character onto the pad and immediately do a
   // prefresh().
 
-  int refresh();
+  int refresh() NCURSES_OVERRIDE;
   // If a viewport is defined the pad is displayed in this window, otherwise
   // this is a noop.
 
@@ -1506,7 +1517,7 @@ public:
   // on the screen. <b>refresh</b> copies a rectangle of this size beginning
   // with top left corner pminrow,pmincol onto the screen and calls doupdate().
 
-  int noutrefresh();
+  int noutrefresh() NCURSES_OVERRIDE;
   // If a viewport is defined the pad is displayed in this window, otherwise
   // this is a noop.
 
@@ -1533,10 +1544,10 @@ public:
 // A FramedPad is constructed always with a viewport window. This viewport
 // will be framed (by a box() command) and the interior of the box is the
 // viewport subwindow. On the frame we display scrollbar sliders.
-class NCURSES_IMPEXP NCursesFramedPad : public NCursesPad
+class NCURSES_CXX_IMPEXP NCursesFramedPad : public NCursesPad
 {
 protected:
-  virtual void OnOperation(int pad_req);
+  virtual void OnOperation(int pad_req) NCURSES_OVERRIDE;
 
 public:
   NCursesFramedPad(NCursesWindow& win, int nlines, int ncols,
@@ -1551,7 +1562,7 @@ public:
     delete getSubWindow();
   }
 
-  void setWindow(NCursesWindow& view, int v_grid = 1, int h_grid = 1) {
+  void setWindow(NCursesWindow& view, int v_grid = 1, int h_grid = 1) NCURSES_OVERRIDE {
     (void) view;
     (void) v_grid;
     (void) h_grid;
@@ -1559,7 +1570,7 @@ public:
   }
   // Disable this call; the viewport is already defined
 
-  void setSubWindow(NCursesWindow& sub) {
+  void setSubWindow(NCursesWindow& sub) NCURSES_OVERRIDE {
     (void) sub;
     err_handler("Operation not allowed");
   }

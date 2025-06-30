@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020 Thomas E. Dickey                                          *
+ * Copyright 2020-2021,2023 Thomas E. Dickey                                *
  * Copyright 2005-2012,2017 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -37,14 +37,10 @@
 
 #include <tic.h>
 
-MODULE_ID("$Id: trim_sgr0.c,v 1.18 2020/02/02 23:34:34 tom Exp $")
+MODULE_ID("$Id: trim_sgr0.c,v 1.22 2023/09/23 18:47:56 tom Exp $")
 
 #undef CUR
 #define CUR tp->
-
-#define CSI       233
-#define ESC       033		/* ^[ */
-#define L_BRACK   '['
 
 static char *
 set_attribute_9(TERMTYPE2 *tp, int flag)
@@ -52,7 +48,7 @@ set_attribute_9(TERMTYPE2 *tp, int flag)
     const char *value;
     char *result;
 
-    value = tparm(set_attributes, 0, 0, 0, 0, 0, 0, 0, 0, flag);
+    value = TIPARM_9(set_attributes, 0, 0, 0, 0, 0, 0, 0, 0, flag);
     if (PRESENT(value))
 	result = strdup(value);
     else
@@ -65,9 +61,9 @@ is_csi(const char *s)
 {
     int result = 0;
     if (s != 0) {
-	if (UChar(s[0]) == CSI)
+	if (UChar(s[0]) == CSI_CHR)
 	    result = 1;
-	else if (s[0] == ESC && s[1] == L_BRACK)
+	else if (s[0] == ESC_CHR && s[1] == L_BLOCK)
 	    result = 2;
     }
     return result;
@@ -222,7 +218,7 @@ compare_part(const char *part, const char *full)
 }
 
 /*
- * While 'sgr0' is the "same" as termcap 'me', there is a compatibility issue. 
+ * While 'sgr0' is the "same" as termcap 'me', there is a compatibility issue.
  * The sgr/sgr0 capabilities include setting/clearing alternate character set
  * mode.  A termcap application cannot use sgr, so sgr0 strings that reset
  * alternate character set mode will be misinterpreted.  Here, we remove those

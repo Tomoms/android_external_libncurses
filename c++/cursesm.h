@@ -1,6 +1,6 @@
 // * This makes emacs happy -*-Mode: C++;-*-
 /****************************************************************************
- * Copyright 2019,2020 Thomas E. Dickey                                     *
+ * Copyright 2019-2020,2022 Thomas E. Dickey                                *
  * Copyright 1998-2012,2014 Free Software Foundation, Inc.                  *
  *                                                                          *
  * Permission is hereby granted, free of charge, to any person obtaining a  *
@@ -32,7 +32,7 @@
  *   Author: Juergen Pfeifer, 1997                                          *
  ****************************************************************************/
 
-// $Id: cursesm.h,v 1.33 2020/02/02 23:34:34 tom Exp $
+// $Id: cursesm.h,v 1.35 2022/08/20 20:52:15 tom Exp $
 
 #ifndef NCURSES_CURSESM_H_incl
 #define NCURSES_CURSESM_H_incl 1
@@ -47,7 +47,7 @@ extern "C" {
 // This wraps the ITEM type of <menu.h>
 // -------------------------------------------------------------------------
 //
-class NCURSES_IMPEXP NCursesMenuItem
+class NCURSES_CXX_IMPEXP NCursesMenuItem
 {
   friend class NCursesMenu;
 
@@ -153,7 +153,7 @@ typedef bool ITEMCALLBACK(NCursesMenuItem&);
 // If you don't like to create a child class for individual items to
 // overload action(), you may use this class and provide a callback
 // function pointer for items.
-class NCURSES_IMPEXP NCursesMenuCallbackItem : public NCursesMenuItem
+class NCURSES_CXX_IMPEXP NCursesMenuCallbackItem : public NCursesMenuItem
 {
 private:
   ITEMCALLBACK* p_fct;
@@ -182,7 +182,7 @@ public:
 
   virtual ~NCursesMenuCallbackItem() THROWS(NCursesException);
 
-  bool action();
+  bool action() NCURSES_OVERRIDE;
 };
 
   // This are the built-in hook functions in this C++ binding. In C++ we use
@@ -200,7 +200,7 @@ extern "C" {
 // This wraps the MENU type of <menu.h>
 // -------------------------------------------------------------------------
 //
-class NCURSES_IMPEXP NCursesMenu : public NCursesPanel
+class NCURSES_CXX_IMPEXP NCursesMenu : public NCursesPanel
 {
 protected:
   MENU *menu;
@@ -512,21 +512,21 @@ public:
   }
 
   // Decorations
-  inline void frame(const char *title=NULL, const char* btitle=NULL) {
+  inline void frame(const char *title=NULL, const char* btitle=NULL) NCURSES_OVERRIDE {
     if (b_framed)
       NCursesPanel::frame(title,btitle);
     else
       OnError(E_SYSTEM_ERROR);
   }
 
-  inline void boldframe(const char *title=NULL, const char* btitle=NULL) {
+  inline void boldframe(const char *title=NULL, const char* btitle=NULL) NCURSES_OVERRIDE {
     if (b_framed)
       NCursesPanel::boldframe(title,btitle);
     else
       OnError(E_SYSTEM_ERROR);
   }
 
-  inline void label(const char *topLabel, const char *bottomLabel) {
+  inline void label(const char *topLabel, const char *bottomLabel) NCURSES_OVERRIDE {
     if (b_framed)
       NCursesPanel::label(topLabel,bottomLabel);
     else
@@ -596,7 +596,7 @@ public:
 // to create a UserItem.
 // -------------------------------------------------------------------------
 //
-template<class T> class NCURSES_IMPEXP NCursesUserItem : public NCursesMenuItem
+template<class T> class NCURSES_CXX_IMPEXP NCursesUserItem : public NCursesMenuItem
 {
 public:
   NCursesUserItem (const char* p_name,
@@ -623,7 +623,7 @@ public:
 // The same mechanism is used to attach user data to a menu
 // -------------------------------------------------------------------------
 //
-template<class T> class NCURSES_IMPEXP NCursesUserMenu : public NCursesMenu
+template<class T> class NCURSES_CXX_IMPEXP NCursesUserMenu : public NCursesMenu
 {
 protected:
   NCursesUserMenu( int  nlines,
